@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no">
+    <title>AdCents</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        :root {
+            --primary: #00FF9D;
+            --surface-0: #0B0F1A;
+            --surface-1: #161B2A;
+            --surface-2: #21273B;
+            --text-primary: #F8FAFC;
+            --text-secondary: #94A3B8;
+            --error: #FF4444;
+            --success: #00FF9D;
+            --gradient: linear-gradient(135deg, var(--primary) 0%, #00E6C3 100%);
+            --shadow: 0 12px 32px rgba(0,0,0,0.25);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+            -webkit-touch-callout: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background: var(--surface-0);
+            color: var(--text-primary);
+            min-height: 100vh;
+            padding: 1rem;
+            display: flex;
+            flex-direction: column;
+            touch-action: pan-x pan-y;
+            overscroll-behavior: none;
+        }
+
+        .container {
+            max-width: 480px;
+            margin: 0 auto;
+            width: 100%;
+            background: var(--surface-1);
+            border-radius: 1.5rem;
+            padding: 1.5rem;
+            box-shadow: var(--shadow);
+            border: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .nav-bar {
+            display: flex;
+            justify-content: flex-end;
+            gap: 1.25rem;
+            margin-bottom: 2rem;
+        }
+
+        .nav-icon {
+            width: 1.75rem;
+            height: 1.75rem;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .nav-icon:hover {
+            color: var(--primary);
+            transform: translateY(-2px);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 2.5rem;
+            padding: 0 1rem;
+        }
+
+        .header h1 {
+            background: var(--gradient);
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-size: 1.75rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            line-height: 1.2;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: var(--surface-2);
+            padding: 1.25rem;
+            border-radius: 1rem;
+            text-align: center;
+            transition: transform 0.2s ease;
+        }
+
+        .stat-label {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            margin-bottom: 0.5rem;
+            letter-spacing: 0.5px;
+        }
+
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: 600;
+            background: var(--gradient);
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: -0.5px;
+        }
+
+        .main-button {
+            width: 100%;
+            padding: 1.125rem;
+            border: none;
+            border-radius: 1rem;
+            background: var(--gradient);
+            color: var(--surface-0);
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            margin-bottom: 1.5rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .main-button::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255,255,255,0.1);
+            opacity: 0;
+            transition: opacity 0.2s ease;
+        }
+
+        .main-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(0, 255, 157, 0.2);
+        }
+
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.7);
+            backdrop-filter: blur(12px);
+            display: none;
+            z-index: 100;
+        }
+
+        .modal {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: var(--surface-1);
+            border-radius: 1.5rem;
+            padding: 2rem;
+            width: 90%;
+            max-width: 400px;
+            display: none;
+            z-index: 101;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .modal-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .modal-close {
+            width: 1.5rem;
+            height: 1.5rem;
+            cursor: pointer;
+            color: var(--text-secondary);
+            transition: color 0.2s ease;
+        }
+
+        .input-group {
+            margin-bottom: 1.25rem;
+        }
+
+        .input-label {
+            display: block;
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            margin-bottom: 0.5rem;
+        }
+
+        .input-field {
+            width: 100%;
+            padding: 0.875rem;
+            background: var(--surface-2);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 0.75rem;
+            color: var(--text-primary);
+            font-size: 1rem;
+            transition: border-color 0.2s ease;
+        }
+
+        .referral-card {
+            background: var(--surface-2);
+            padding: 1.5rem;
+            border-radius: 1rem;
+        }
+
+        .referral-incentive {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem;
+            background: rgba(0, 255, 157, 0.1);
+            border-radius: 0.75rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .status-notification {
+            position: fixed;
+            bottom: 2rem;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 1rem 2rem;
+            border-radius: 0.75rem;
+            font-weight: 500;
+            backdrop-filter: blur(10px);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            max-width: 90%;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from { transform: translate(-50%, 100%); opacity: 0; }
+            to { transform: translate(-50%, 0); opacity: 1; }
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                padding: 1.25rem;
+                border-radius: 1.25rem;
+            }
+            .stat-value {
+                font-size: 1.25rem;
+            }
+            .main-button {
+                padding: 1rem;
+                font-size: 0.9375rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="nav-bar">
+            <svg class="nav-icon" onclick="showWithdrawModal()" viewBox="0 0 24 24">
+                <path fill="currentColor" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/>
+            </svg>
+            <svg class="nav-icon" onclick="showReferralModal()" viewBox="0 0 24 24">
+                <path fill="currentColor" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/>
+            </svg>
+        </div>
+
+        <div class="header">
+            <h1>AdCents Network</h1>
+            <p class="text-secondary">Earn USDT by watching ads</p>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-label">Ads Watched</div>
+                <div class="stat-value" id="watched-ads">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">USDT Balance</div>
+                <div class="stat-value" id="earned-points">0.00</div>
+            </div>
+        </div>
+
+        <button class="main-button" onclick="showAd()">
+            ▶ Watch Ad (+$0.02)
+        </button>
+    </div>
+
+    <!-- Withdraw Modal -->
+    <div class="modal" id="withdrawModal">
+        <div class="modal-header">
+            <div class="modal-title">
+                <svg viewBox="0 0 24 24" width="24" height="24">
+                    <path fill="currentColor" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/>
+                </svg>
+                Withdraw USDT
+            </div>
+            <svg class="modal-close" onclick="closeModal()" viewBox="0 0 24 24">
+                <path fill="currentColor" d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+            </svg>
+        </div>
+        <div class="input-group">
+            <label class="input-label">Amount (USDT)</label>
+            <input type="number" class="input-field" id="withdraw-amount" placeholder="5.00" step="0.01" min="5">
+        </div>
+        <div class="input-group">
+            <label class="input-label">Payment Method</label>
+            <select class="input-field" id="payment-method">
+                <option value="bkash">Bkash</option>
+                <option value="nagad">Nagad</option>
+                <option value="manual">Binance</option>
+            </select>
+        </div>
+        <div class="input-group">
+            <label class="input-label">Recipient Information</label>
+            <input type="text" class="input-field" id="withdraw-phone" placeholder="Enter valid account details">
+        </div>
+        <button class="main-button" onclick="withdrawPoints()">
+            Withdraw Funds
+        </button>
+    </div>
+
+    <!-- Referral Modal -->
+    <div class="modal" id="referralModal">
+        <div class="modal-header">
+            <div class="modal-title">
+                <svg viewBox="0 0 24 24" width="24" height="24">
+                    <path fill="currentColor" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/>
+                </svg>
+                Referral Program
+            </div>
+            <svg class="modal-close" onclick="closeModal()" viewBox="0 0 24 24">
+                <path fill="currentColor" d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+            </svg>
+        </div>
+        <div class="referral-card">
+            <div class="referral-incentive">
+                <svg viewBox="0 0 24 24" width="24" height="24">
+                    <path fill="currentColor" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/>
+                </svg>
+                <div>
+                    <h3>Earn $0.05 USDT</h3>
+                    <p class="text-secondary">For every successful referral</p>
+                </div>
+            </div>
+            <div class="input-group">
+                <label class="input-label">Your Referral Link</label>
+                <div class="input-field" onclick="copyReferralLink()" style="cursor: pointer">
+                    <span id="referral-link">Loading...</span>
+                </div>
+            </div>
+            <div class="input-group">
+                <label class="input-label">Your Referrals</label>
+                <div class="referral-list" id="referral-list"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="modalOverlay"></div>
+
+    <script type='text/javascript' src='https://pl25778425.profitablecpmrate.com/09/03/99/0903999020af1c96f273a2f61a536cde.js'></script>
+    <script src='https://jagnaimsee.net/vignette.min.js' data-zone='9052218' data-sdk='show_9052218'></script>
+
+    <script>
+        const CONFIG = {
+            BOT_TOKEN: "7787068558:AAENHy5Pa1qvIK3RSVhAsL89Auio-20VHqM",
+            ADMIN_ID: 7476226238,
+            MIN_WITHDRAW: 5,
+            AD_REWARD: 0.02,
+            REFERRAL_BONUS: 0.05,
+            REFERRAL_LINK: "https://t.me/AdCentsBot/Ads?start="
+        };
+
+        const tg = window.Telegram.WebApp;
+        let state = {
+            watchedAds: parseInt(localStorage.getItem('watchedAds')) || 0,
+            balance: parseFloat(localStorage.getItem('balance')) || 0,
+            referrals: JSON.parse(localStorage.getItem('referrals')) || []
+        };
+
+        // Initialize App
+        tg.expand();
+        tg.enableClosingConfirmation();
+        if (tg.platform !== 'unknown') {
+            tg.disableZoom();
+            document.addEventListener('gesturestart', (e) => e.preventDefault());
+            document.addEventListener('dblclick', (e) => e.preventDefault());
+        }
+        initReferralSystem();
+        updateUI();
+
+        function initReferralSystem() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const referrerId = urlParams.get('start');
+            
+            if (referrerId && referrerId !== tg.initDataUnsafe.user?.id.toString()) {
+                if (!state.referrals.some(r => r.id === referrerId)) {
+                    state.referrals.push({
+                        id: referrerId,
+                        date: new Date().toISOString(),
+                        username: `user_${referrerId.slice(-4)}`
+                    });
+                    state.balance += CONFIG.REFERRAL_BONUS;
+                    localStorage.setItem('referrals', JSON.stringify(state.referrals));
+                    localStorage.setItem('balance', state.balance);
+                    updateUI();
+                    showStatus(`+$${CONFIG.REFERRAL_BONUS} USDT referral bonus!`, 'success');
+                }
+            }
+        }
+
+        function updateUI() {
+            document.getElementById('watched-ads').textContent = state.watchedAds;
+            document.getElementById('earned-points').textContent = state.balance.toLocaleString('en-US', {
+                style: 'currency',
+                currency: 'USD',
+                minimumFractionDigits: 2
+            });
+            
+            const referralList = document.getElementById('referral-list');
+            referralList.innerHTML = state.referrals.map(ref => `
+                <div class="stat-card" style="text-align: left; padding: 1rem; margin: 0.5rem 0">
+                    <div style="display: flex; justify-content: space-between; align-items: center">
+                        <div>
+                            <div style="font-weight: 500">@${ref.username}</div>
+                            <div style="font-size: 0.75rem; color: var(--text-secondary)">
+                                ${new Date(ref.date).toLocaleDateString()}
+                            </div>
+                        </div>
+                        <div style="color: var(--primary)">
+                            +$${CONFIG.REFERRAL_BONUS}
+                        </div>
+                    </div>
+                </div>
+            `).join('') || '<div class="text-secondary">No referrals yet</div>';
+            
+            document.getElementById('referral-link').textContent = 
+                `${CONFIG.REFERRAL_LINK}${tg.initDataUnsafe.user?.id || 'user'}`;
+        }
+
+        async function showAd() {
+            try {
+                await show_9052218();
+                state.watchedAds++;
+                state.balance += CONFIG.AD_REWARD;
+                localStorage.setItem('watchedAds', state.watchedAds);
+                localStorage.setItem('balance', state.balance);
+                updateUI();
+                showStatus(`+$${CONFIG.AD_REWARD} USDT added!`, 'success');
+                tg.HapticFeedback.impactOccurred('medium');
+            } catch (error) {
+                console.error('Ad error:', error);
+                showStatus('Ad failed to complete. Please try again.', 'error');
+                tg.HapticFeedback.notificationOccurred('error');
+            }
+        }
+
+        async function withdrawPoints() {
+            const amount = parseFloat(document.getElementById('withdraw-amount').value);
+            const paymentMethod = document.getElementById('payment-method').value;
+            const recipientInfo = document.getElementById('withdraw-phone').value;
+
+            if (!amount || amount < CONFIG.MIN_WITHDRAW) {
+                showStatus(`Minimum withdrawal: $${CONFIG.MIN_WITHDRAW} USDT`, 'error');
+                return;
+            }
+
+            if (amount > state.balance) {
+                showStatus('Insufficient balance', 'error');
+                return;
+            }
+
+            try {
+                state.balance -= amount;
+                localStorage.setItem('balance', state.balance);
+                updateUI();
+
+                await fetch(`https://api.telegram.org/bot${CONFIG.BOT_TOKEN}/sendMessage`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        chat_id: CONFIG.ADMIN_ID,
+                        text: `📤 Withdrawal Request\nUser: @${tg.initDataUnsafe.user?.username}\nAmount: $${amount.toFixed(2)}\nMethod: ${paymentMethod}\nAccount: ${recipientInfo}`
+                    })
+                });
+
+                showStatus('Withdrawal request submitted!', 'success');
+                closeModal();
+                tg.HapticFeedback.notificationOccurred('success');
+            } catch (error) {
+                console.error('Withdrawal error:', error);
+                state.balance += amount;
+                localStorage.setItem('balance', state.balance);
+                updateUI();
+                showStatus('Withdrawal failed. Please try again.', 'error');
+                tg.HapticFeedback.notificationOccurred('error');
+            }
+        }
+
+        function showStatus(text, type) {
+            const notification = document.createElement('div');
+            notification.className = `status-notification ${type}`;
+            notification.innerHTML = `
+                <svg viewBox="0 0 24 24" width="20" height="20">
+                    ${type === 'success' ? 
+                        '<path fill="currentColor" d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>' :
+                        '<path fill="currentColor" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/>'}
+                </svg>
+                ${text}
+            `;
+            document.body.appendChild(notification);
+            setTimeout(() => notification.remove(), 3000);
+        }
+
+        function showWithdrawModal() {
+            document.getElementById('withdrawModal').style.display = 'block';
+            document.getElementById('modalOverlay').style.display = 'block';
+        }
+
+        function showReferralModal() {
+            document.getElementById('referralModal').style.display = 'block';
+            document.getElementById('modalOverlay').style.display = 'block';
+        }
+
+        function closeModal() {
+            document.querySelectorAll('.modal, .modal-overlay').forEach(el => {
+                el.style.display = 'none';
+            });
+        }
+
+        function copyReferralLink() {
+            navigator.clipboard.writeText(document.getElementById('referral-link').textContent)
+                .then(() => showStatus('Referral link copied!', 'success'))
+                .catch(() => showStatus('Failed to copy link', 'error'));
+        }
+
+        document.getElementById('modalOverlay').addEventListener('click', closeModal);
+    </script>
+</body>
+</html>
