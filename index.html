@@ -406,7 +406,6 @@
             <select class="input-field" id="payment-method">
                 <option value="binance">Binance</option>
                 <option value="paypal">PayPal</option>
-                <option value="payeer">Payeer</option>
                 <option value="bkash">Bkash</option>
             </select>
         </div>
@@ -483,14 +482,6 @@
             }
         }
 
-        // Load saved data on page load
-        document.addEventListener('DOMContentLoaded', () => {
-            const savedData = getFromLocalStorage();
-            // Apply saved data to UI elements
-            if (savedData.balance) updateBalance(savedData.balance);
-            if (savedData.referralLink) updateReferralLink(savedData.referralLink);
-        });
-
         // Track and save user actions
         function trackUserAction(action, data) {
             const actionData = {
@@ -515,10 +506,21 @@
 
         const tg = window.Telegram.WebApp;
         let state = {
-            watchedAds: parseInt(localStorage.getItem('watchedAds')) || 0,
-            balance: parseFloat(localStorage.getItem('balance')) || 0,
-            referrals: JSON.parse(localStorage.getItem('referrals')) || []
+            watchedAds: 0,
+            balance: 0,
+            referrals: []
         };
+
+        // Load saved data on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            const savedData = getFromLocalStorage();
+            state = {
+                watchedAds: savedData.watchedAds || 0,
+                balance: savedData.balance || 0,
+                referrals: savedData.referrals || []
+            };
+            updateUI();
+        });
 
         // Initialize App
         tg.expand();
@@ -543,8 +545,7 @@
                         username: `user_${referrerId.slice(-4)}`
                     });
                     state.balance += CONFIG.REFERRAL_BONUS;
-                    localStorage.setItem('referrals', JSON.stringify(state.referrals));
-                    localStorage.setItem('balance', state.balance);
+                    saveToLocalStorage(state);
                     updateUI();
                     showStatus(`+$${CONFIG.REFERRAL_BONUS} USDT referral bonus!`, 'success');
                 }
@@ -585,8 +586,7 @@
                 await show_9052218();
                 state.watchedAds++;
                 state.balance += CONFIG.AD_REWARD;
-                localStorage.setItem('watchedAds', state.watchedAds);
-                localStorage.setItem('balance', state.balance);
+                saveToLocalStorage(state);
                 updateUI();
                 showStatus(`+$${CONFIG.AD_REWARD} USDT added!`, 'success');
                 tg.HapticFeedback.impactOccurred('medium');
@@ -614,7 +614,7 @@
 
             try {
                 state.balance -= amount;
-                localStorage.setItem('balance', state.balance);
+                saveToLocalStorage(state);
                 updateUI();
 
                 await fetch(`https://api.telegram.org/bot${CONFIG.BOT_TOKEN}/sendMessage`, {
@@ -632,7 +632,7 @@
             } catch (error) {
                 console.error('Withdrawal error:', error);
                 state.balance += amount;
-                localStorage.setItem('balance', state.balance);
+                saveToLocalStorage(state);
                 updateUI();
                 showStatus('Withdrawal failed. Please try again.', 'error');
                 tg.HapticFeedback.notificationOccurred('error');
