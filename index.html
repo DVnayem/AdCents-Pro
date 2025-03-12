@@ -17,6 +17,7 @@
             --success: #00FF9D;
             --gradient: linear-gradient(135deg, var(--primary) 0%, #00E6C3 100%);
             --shadow: 0 12px 32px rgba(0,0,0,0.25);
+            --base-font-size: 16px;
         }
 
         * {
@@ -32,6 +33,10 @@
             -webkit-tap-highlight-color: transparent;
         }
 
+        html {
+            font-size: var(--base-font-size);
+        }
+
         body {
             background: var(--surface-0);
             color: var(--text-primary);
@@ -41,6 +46,8 @@
             flex-direction: column;
             touch-action: pan-x pan-y;
             overscroll-behavior: none;
+            font-size: 1rem;
+            line-height: 1.5;
         }
 
         .container {
@@ -49,7 +56,7 @@
             width: 100%;
             background: var(--surface-1);
             border-radius: 1.5rem;
-            padding: 1.5rem;
+            padding: clamp(1rem, 4vw, 1.5rem);
             box-shadow: var(--shadow);
             border: 1px solid rgba(255,255,255,0.05);
         }
@@ -85,12 +92,39 @@
             background-clip: text;
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            font-size: 1.75rem;
+            font-size: clamp(1.5rem, 5vw, 1.75rem);
             font-weight: 700;
             margin-bottom: 0.5rem;
             line-height: 1.2;
         }
 
+        .text-secondary {
+            font-size: clamp(0.875rem, 3vw, 1rem);
+        }
+
+        .stat-value {
+            font-size: clamp(1.25rem, 4vw, 1.5rem);
+        }
+
+        .status-notification {
+            position: fixed;
+            bottom: 2rem;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.75rem;
+            font-weight: 500;
+            backdrop-filter: blur(10px);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            max-width: min(90%, 400px);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            font-size: clamp(0.875rem, 3vw, 1rem);
+        }
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
@@ -226,6 +260,9 @@
             color: var(--text-primary);
             font-size: 1rem;
             transition: border-color 0.2s ease;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
         .referral-card {
@@ -266,17 +303,51 @@
             to { transform: translate(-50%, 0); opacity: 1; }
         }
 
-        @media (max-width: 480px) {
+        @media screen and (max-width: 480px) {
+            :root {
+                --base-font-size: 14px;
+            }
+
             .container {
-                padding: 1.25rem;
-                border-radius: 1.25rem;
-            }
-            .stat-value {
-                font-size: 1.25rem;
-            }
-            .main-button {
                 padding: 1rem;
-                font-size: 0.9375rem;
+                border-radius: 1rem;
+            }
+
+            .stats-grid {
+                gap: 0.75rem;
+            }
+
+            .stat-card {
+                padding: 1rem;
+            }
+
+            .status-notification {
+                bottom: 1rem;
+                padding: 0.5rem 1rem;
+                max-width: 85%;
+            }
+        }
+
+        @media screen and (max-width: 360px) {
+            :root {
+                --base-font-size: 12px;
+            }
+
+            body {
+                padding: 0.75rem;
+            }
+
+            .container {
+                padding: 0.75rem;
+            }
+
+            .nav-bar {
+                gap: 1rem;
+                margin-bottom: 1.5rem;
+            }
+
+            .header {
+                margin-bottom: 2rem;
             }
         }
     </style>
@@ -285,10 +356,10 @@
     <div class="container">
         <div class="nav-bar">
             <svg class="nav-icon" onclick="showWithdrawModal()" viewBox="0 0 24 24">
-                <path fill="currentColor" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/>
+                <path fill="currentColor" d="M19 14V6c0-1.1-.9-2-2-2H3c-1.1 0-2 .9-2 2v8c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zm-2 0H3V6h14v8zm-7-7c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3zm13 0v11c0 1.1-.9 2-2 2H4v-2h17V7h2z"/>
             </svg>
             <svg class="nav-icon" onclick="showReferralModal()" viewBox="0 0 24 24">
-                <path fill="currentColor" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/>
+                <path fill="currentColor" d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92s2.92-1.31 2.92-2.92-1.31-2.92-2.92-2.92z"/>
             </svg>
         </div>
 
@@ -333,14 +404,15 @@
         <div class="input-group">
             <label class="input-label">Payment Method</label>
             <select class="input-field" id="payment-method">
+                <option value="binance">Binance</option>
+                <option value="paypal">PayPal</option>
+                <option value="payeer">Payeer</option>
                 <option value="bkash">Bkash</option>
-                <option value="nagad">Nagad</option>
-                <option value="manual">Binance</option>
             </select>
         </div>
         <div class="input-group">
-            <label class="input-label">Recipient Information</label>
-            <input type="text" class="input-field" id="withdraw-phone" placeholder="Enter valid account details">
+            <label class="input-label">Receive Information</label>
+            <input type="text" class="input-field" id="withdraw-phone" placeholder="Enter valid account ID">
         </div>
         <button class="main-button" onclick="withdrawPoints()">
             Withdraw Funds
@@ -389,6 +461,49 @@
     <script src='https://jagnaimsee.net/vignette.min.js' data-zone='9052218' data-sdk='show_9052218'></script>
 
     <script>
+        const LOCAL_STORAGE_KEY = 'adcents_user_data';
+
+        function saveToLocalStorage(data) {
+            try {
+                const existingData = getFromLocalStorage();
+                const updatedData = { ...existingData, ...data, timestamp: Date.now() };
+                localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(updatedData));
+            } catch (error) {
+                console.error('Error saving to local storage:', error);
+            }
+        }
+
+        function getFromLocalStorage() {
+            try {
+                const data = localStorage.getItem(LOCAL_STORAGE_KEY);
+                return data ? JSON.parse(data) : {};
+            } catch (error) {
+                console.error('Error reading from local storage:', error);
+                return {};
+            }
+        }
+
+        // Load saved data on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            const savedData = getFromLocalStorage();
+            // Apply saved data to UI elements
+            if (savedData.balance) updateBalance(savedData.balance);
+            if (savedData.referralLink) updateReferralLink(savedData.referralLink);
+        });
+
+        // Track and save user actions
+        function trackUserAction(action, data) {
+            const actionData = {
+                action,
+                data,
+                timestamp: Date.now()
+            };
+            const savedData = getFromLocalStorage();
+            const actions = savedData.actions || [];
+            actions.push(actionData);
+            saveToLocalStorage({ actions });
+        }
+
         const CONFIG = {
             BOT_TOKEN: "7787068558:AAENHy5Pa1qvIK3RSVhAsL89Auio-20VHqM",
             ADMIN_ID: 7476226238,
@@ -565,3 +680,39 @@
     </script>
 </body>
 </html>
+
+<script>
+    // Prevent popunder ads and window manipulation
+    (function() {
+        // Lock window focus and prevent new window creation
+        window.onbeforeunload = null;
+        window.onunload = null;
+        window.open = function() { return null; };
+        window.blur = function() { window.focus(); };
+        
+        // Prevent window manipulation
+        Object.defineProperty(window, 'onbeforeunload', {
+            get: function() { return null; },
+            set: function() { return null; }
+        });
+        
+        // Protect against window.open calls
+        HTMLAnchorElement.prototype.click = function() {
+            if (this.href) {
+                window.location = this.href;
+                return false;
+            }
+        };
+        
+        // Prevent popup/popunder creation
+        document.addEventListener('click', function(e) {
+            if (e.target.tagName === 'A') {
+                e.preventDefault();
+                if (e.target.href) {
+                    window.location = e.target.href;
+                }
+            }
+        }, true);
+    })();
+</script>
+</body>
