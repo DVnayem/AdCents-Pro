@@ -933,6 +933,7 @@
         .loading-screen.hidden {
             opacity: 0;
             visibility: hidden;
+            pointer-events: none;
         }
         
         .loader-container {
@@ -990,7 +991,7 @@
             background: var(--gradient);
             border-radius: 2px;
             box-shadow: 0 0 10px rgba(0, 255, 157, 0.3);
-            animation: progress 4s cubic-bezier(0.4, 0.0, 0.2, 1) forwards;
+            animation: progress 2s cubic-bezier(0.4, 0.0, 0.2, 1) forwards;
         }
         
         @keyframes progress {
@@ -1033,7 +1034,7 @@
         </div>
     </div>
     
-    <div class="container">
+    <div class="container" id="app-container" style="display: none;">
         <div class="app-content">
         <div class="nav-bar">
             <!-- Navigation icons removed as requested -->
@@ -1152,15 +1153,25 @@
     <script src='https://jagnaimsee.net/vignette.min.js' data-zone='9052218' data-sdk='show_9052218'></script>
 
     <script>
+        // Define constants
         const LOCAL_STORAGE_KEY = 'adcents_user_data';
+        const APP_VERSION = '1.0.1'; // Version tracking for debugging
 
+        // Improved local storage handling with error recovery
         function saveToLocalStorage(data) {
             try {
                 const existingData = getFromLocalStorage();
-                const updatedData = { ...existingData, ...data, timestamp: Date.now() };
+                const updatedData = { 
+                    ...existingData, 
+                    ...data, 
+                    timestamp: Date.now(),
+                    appVersion: APP_VERSION
+                };
                 localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(updatedData));
+                return true;
             } catch (error) {
                 console.error('Error saving to local storage:', error);
+                return false;
             }
         }
 
@@ -1170,6 +1181,8 @@
                 return data ? JSON.parse(data) : {};
             } catch (error) {
                 console.error('Error reading from local storage:', error);
+                // Clear corrupted data
+                try { localStorage.removeItem(LOCAL_STORAGE_KEY); } catch(e) {}
                 return {};
             }
         }
@@ -1203,35 +1216,74 @@
             referrals: []
         };
 
-        // Load saved data on page load
-        document.addEventListener('DOMContentLoaded', () => {
-            const savedData = getFromLocalStorage();
-            state = {
-                watchedAds: savedData.watchedAds || 0,
-                balance: savedData.balance || 0,
-                referrals: savedData.referrals || []
-            };
-            updateUI();
-        });
-
-        // Initialize App
-        tg.expand();
-        tg.enableClosingConfirmation();
-        
-        // Better Telegram WebApp integration
-        if (tg.platform !== 'unknown') {
-            tg.disableZoom();
-            tg.setBackgroundColor("var(--surface-0)");
-            tg.setHeaderColor("var(--surface-0)");
-            document.addEventListener('gesturestart', (e) => e.preventDefault());
-            document.addEventListener('dblclick', (e) => e.preventDefault());
-            
-            // Improve touch response
-            document.addEventListener('touchstart', () => {}, {passive: true});
+        // Load saved data and ensure proper initialization
+        function loadUserData() {
+            try {
+                const savedData = getFromLocalStorage();
+                state = {
+                    watchedAds: savedData.watchedAds || 0,
+                    balance: savedData.balance || 0,
+                    referrals: savedData.referrals || []
+                };
+                updateUI();
+                console.log('User data loaded successfully');
+                return true;
+            } catch (error) {
+                console.error('Error loading user data:', error);
+                // Fallback to default state
+                state = { watchedAds: 0, balance: 0, referrals: [] };
+                updateUI();
+                return false;
+            }
         }
         
-        // Hide loading screen after content loads
-        window.addEventListener('load', () => {
+        // Load data when DOM is ready
+        document.addEventListener('DOMContentLoaded', loadUserData);
+        
+        // Fallback if DOMContentLoaded already fired
+        if (document.readyState === 'complete' || document.readyState === 'interactive') {
+            setTimeout(loadUserData, 200);
+        }
+
+        // Initialize App and Telegram WebApp integration
+// Use existing tg variable instead of redeclaring
+if (!telegramInitialized && window.Telegram?.WebApp) {
+    tg.expand();
+}
+        let telegramInitialized = false;
+        
+        // Check if running in Telegram WebApp
+        const isTelegramWebApp = !!tg;
+        
+        // Configure Telegram WebApp if available
+        if (isTelegramWebApp) {
+            try {
+                // Essential Telegram WebApp configurations
+                tg.expand();
+                tg.enableClosingConfirmation();
+                tg.disableZoom();
+                tg.setBackgroundColor("var(--surface-0)");
+                tg.setHeaderColor("var(--surface-0)");
+                
+                // Prevent unwanted gestures in WebApp
+                document.addEventListener('gesturestart', (e) => e.preventDefault());
+                document.addEventListener('dblclick', (e) => e.preventDefault());
+                
+                // Improve touch response
+                document.addEventListener('touchstart', () => {}, {passive: true});
+                
+                // Mark as initialized
+                telegramInitialized = true;
+                console.log('Telegram WebApp initialized successfully');
+            } catch (error) {
+                console.error('Error initializing Telegram WebApp:', error);
+            }
+        } else {
+            console.log('Not running in Telegram WebApp environment');
+        }
+        
+        // Initialize app with proper loading sequence
+        function initializeApp() {
             // Rotating loading messages for enhanced user experience
             const loadingMessages = [
                 "Loading your earnings...",
@@ -1243,19 +1295,38 @@
             
             let messageIndex = 0;
             const loaderText = document.getElementById('loader-text');
+            const appContainer = document.getElementById('app-container');
             
-            // Change message every second during the 5-second loading period
+            // Change message every second during loading
             const messageInterval = setInterval(() => {
                 messageIndex = (messageIndex + 1) % loadingMessages.length;
                 loaderText.textContent = loadingMessages[messageIndex];
-            }, 1000);
+            }, 800);
             
-            // Hide loading screen after initialization
+            // Show app content and hide loading screen
             setTimeout(() => {
                 clearInterval(messageInterval);
                 document.getElementById('loading-screen').classList.add('hidden');
-            }, 2000); // Reduced loading time for better UX in Telegram WebApp
+                appContainer.style.display = 'flex';
+                
+                // Force repaint to ensure visibility in Telegram WebApp
+                setTimeout(() => {
+                    window.scrollTo(0, 1);
+                    window.scrollTo(0, 0);
+                }, 100);
+            }, 2000);
+        }
+        
+        // Start initialization when DOM is ready
+        document.addEventListener('DOMContentLoaded', () => {
+            // Wait a moment to ensure Telegram WebApp is fully loaded
+            setTimeout(initializeApp, 100);
         });
+        
+        // Fallback initialization if DOMContentLoaded already fired
+        if (document.readyState === 'complete' || document.readyState === 'interactive') {
+            setTimeout(initializeApp, 100);
+        }
         
         
         initReferralSystem();
@@ -1441,6 +1512,29 @@
                 }
             }
         }, true);
+        
+        // Special handling for Telegram WebApp
+        if (window.Telegram && window.Telegram.WebApp) {
+            // Force visibility after a short delay
+            setTimeout(function() {
+                const appContainer = document.getElementById('app-container');
+                const loadingScreen = document.getElementById('loading-screen');
+                
+                if (appContainer && appContainer.style.display === 'none') {
+                    console.log('Forcing app container visibility');
+                    appContainer.style.display = 'flex';
+                    if (loadingScreen) {
+                        loadingScreen.classList.add('hidden');
+                    }
+                }
+                
+                // Force layout recalculation
+                document.body.style.opacity = 0.99;
+                setTimeout(function() {
+                    document.body.style.opacity = 1;
+                }, 10);
+            }, 1000);
+        }
     })();
 </script>
 </body>
