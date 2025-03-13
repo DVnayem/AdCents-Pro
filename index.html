@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>AdCents</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
@@ -51,6 +51,8 @@
             user-select: none;
             -webkit-touch-callout: none;
             -webkit-tap-highlight-color: transparent;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
         }
 
         html {
@@ -67,12 +69,15 @@
             padding: 0;
             display: flex;
             justify-content: center;
-            align-items: center; /* Changed from stretch to center */
+            align-items: center;
             flex-direction: column;
-            touch-action: pan-x pan-y;
+            touch-action: manipulation;
             overscroll-behavior: none;
             font-size: 1rem;
             line-height: 1.5;
+            position: fixed;
+            width: 100%;
+            overflow: hidden;
         }
 
         .container {
@@ -85,20 +90,28 @@
             flex-direction: column;
             position: relative;
             overflow-x: hidden;
-            box-shadow: var(--shadow-lg);
-            justify-content: center; /* Added to center content vertically */
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+            box-shadow: none;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            padding: env(safe-area-inset-top, 0) env(safe-area-inset-right, 0) env(safe-area-inset-bottom, 0) env(safe-area-inset-left, 0);
         }
 
         .app-content {
             max-width: 640px;
             width: 100%;
             margin: 0 auto;
-            padding: 1.5rem;
+            padding: var(--spacing-lg);
             flex: 1;
             display: flex;
             flex-direction: column;
-            justify-content: center; /* Added to center content vertically */
-            min-height: 100vh; /* Ensure it takes full viewport height */
+            justify-content: center;
+            align-items: center;
+            min-height: 100%;
+            padding-bottom: calc(env(safe-area-inset-bottom, 1rem) + var(--spacing-lg));
+            padding-top: calc(env(safe-area-inset-top, 1rem) + var(--spacing-lg));
         }
 
         .nav-bar {
@@ -129,15 +142,23 @@
 
         .header {
             text-align: center;
-            margin-bottom: var(--vh-spacing-xl); /* Increased spacing from var(--vh-spacing-lg) to var(--vh-spacing-xl) for a more professional look */
+            margin-bottom: var(--vh-spacing-xl);
             padding: var(--vh-spacing-md) 1rem 0;
             position: relative;
             animation: fadeIn 0.8s ease-out;
+            width: 100%;
+            max-width: 90%;
         }
         
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(10px); }
             to { opacity: 1; transform: translateY(0); }
+        }
+        
+        /* Optimize animations for Telegram WebView */
+        .animate-fade-in {
+            will-change: opacity, transform;
+            animation: fadeIn 0.5s ease-out forwards;
         }
 
         .header h1 {
@@ -154,6 +175,7 @@
             position: relative;
             transform: translateZ(0);
             transition: transform 0.3s ease;
+            will-change: transform;
         }
         
         .header h1:hover {
@@ -176,24 +198,25 @@
 
         .status-notification {
             position: fixed;
-            bottom: 2rem;
+            bottom: calc(1rem + env(safe-area-inset-bottom, 0));
             left: 50%;
             transform: translateX(-50%);
-            padding: 0.875rem 1.5rem;
+            padding: 0.75rem 1.25rem;
             border-radius: var(--border-radius-md);
             font-weight: 500;
-            backdrop-filter: blur(10px);
+            background-color: rgba(0, 0, 0, 0.7);
             z-index: 1000;
             display: flex;
             align-items: center;
             gap: 0.75rem;
-            max-width: min(90%, 400px);
+            max-width: 90%;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
-            font-size: clamp(0.875rem, 3vw, 1rem);
-            box-shadow: var(--shadow-lg);
-            animation: slideUp 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            font-size: 0.9rem;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            animation: slideUp 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            will-change: transform, opacity;
         }
         
         @keyframes slideUp {
@@ -216,9 +239,10 @@
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
-            gap: 1.25rem;
-            margin-bottom: var(--vh-spacing-lg); /* Changed to vh-based spacing */
+            gap: var(--spacing-lg);
+            margin-bottom: var(--vh-spacing-lg);
             width: 100%;
+            max-width: 90%;
         }
 
         .stat-card {
@@ -257,6 +281,7 @@
 
         .main-button {
             width: 100%;
+            max-width: 90%;
             padding: 1.25rem;
             border: none;
             border-radius: var(--border-radius-lg);
@@ -265,12 +290,14 @@
             font-weight: 700;
             font-size: 1.125rem;
             cursor: pointer;
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-            margin-bottom: var(--vh-spacing-md); /* Changed to vh-based spacing */
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            margin-bottom: var(--vh-spacing-md);
             position: relative;
             overflow: hidden;
-            box-shadow: 0 8px 24px rgba(0, 255, 157, 0.25);
+            box-shadow: 0 4px 12px rgba(0, 255, 157, 0.2);
             letter-spacing: 0.5px;
+            -webkit-tap-highlight-color: transparent;
+            will-change: transform;
         }
 
         .main-button::after {
@@ -297,9 +324,11 @@
         
         .action-buttons {
             display: flex;
-            gap: 1rem;
-            margin-bottom: var(--vh-spacing-md); /* Changed to vh-based spacing */
+            gap: var(--spacing-lg);
+            margin-bottom: var(--vh-spacing-md);
             width: 100%;
+            max-width: 90%;
+            justify-content: center;
         }
         
         .secondary-button {
@@ -342,9 +371,10 @@
             right: 0;
             bottom: 0;
             background: rgba(0,0,0,0.8);
-            backdrop-filter: blur(12px);
             display: none;
             z-index: 100;
+            will-change: opacity;
+            transition: opacity 0.3s ease;
         }
 
         .modal {
@@ -354,14 +384,17 @@
             transform: translate(-50%, -50%);
             background: var(--surface-1);
             border-radius: var(--border-radius-lg);
-            padding: var(--spacing-xl);
+            padding: var(--spacing-lg);
             width: 90%;
             max-width: 480px;
+            max-height: 90vh;
+            overflow-y: auto;
             display: none;
             z-index: 101;
             border: var(--border-light);
             box-shadow: var(--shadow-lg);
-            animation: modalFadeIn 0.4s ease-out;
+            animation: modalFadeIn 0.3s ease-out;
+            will-change: transform, opacity;
         }
         
         @keyframes modalFadeIn {
@@ -467,24 +500,25 @@
 
         .status-notification {
             position: fixed;
-            bottom: 2rem;
+            bottom: calc(1rem + env(safe-area-inset-bottom, 0));
             left: 50%;
             transform: translateX(-50%);
-            padding: 0.875rem 1.5rem;
+            padding: 0.75rem 1.25rem;
             border-radius: var(--border-radius-md);
             font-weight: 500;
-            backdrop-filter: blur(10px);
+            background-color: rgba(0, 0, 0, 0.7);
             z-index: 1000;
             display: flex;
             align-items: center;
             gap: 0.75rem;
-            max-width: min(90%, 400px);
+            max-width: 90%;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
-            font-size: clamp(0.875rem, 3vw, 1rem);
-            box-shadow: var(--shadow-lg);
-            animation: slideUp 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            font-size: 0.9rem;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            animation: slideUp 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            will-change: transform, opacity;
         }
         
         @keyframes slideUp {
@@ -632,9 +666,10 @@
             right: 0;
             bottom: 0;
             background: rgba(0,0,0,0.8);
-            backdrop-filter: blur(12px);
             display: none;
             z-index: 100;
+            will-change: opacity;
+            transition: opacity 0.3s ease;
         }
 
         .modal {
@@ -644,14 +679,17 @@
             transform: translate(-50%, -50%);
             background: var(--surface-1);
             border-radius: var(--border-radius-lg);
-            padding: var(--spacing-xl);
+            padding: var(--spacing-lg);
             width: 90%;
             max-width: 480px;
+            max-height: 90vh;
+            overflow-y: auto;
             display: none;
             z-index: 101;
             border: var(--border-light);
             box-shadow: var(--shadow-lg);
-            animation: modalFadeIn 0.4s ease-out;
+            animation: modalFadeIn 0.3s ease-out;
+            will-change: transform, opacity;
         }
         
         @keyframes modalFadeIn {
@@ -780,14 +818,23 @@
         @media screen and (max-width: 768px) {
             .app-content {
                 padding: var(--spacing-md);
+                justify-content: center;
             }
             
             .header {
                 margin-bottom: var(--spacing-xl);
+                max-width: 95%;
             }
             
             .stats-grid {
                 margin-bottom: var(--spacing-xl);
+                gap: var(--spacing-md);
+                max-width: 95%;
+            }
+            
+            .main-button,
+            .action-buttons {
+                max-width: 95%;
             }
         }
         
@@ -798,10 +845,12 @@
 
             .app-content {
                 padding: var(--spacing-sm);
+                justify-content: center;
             }
 
             .stats-grid {
                 gap: var(--spacing-md);
+                max-width: 100%;
             }
 
             .stat-card {
@@ -812,6 +861,7 @@
                 flex-direction: column;
                 gap: var(--spacing-sm);
                 margin-bottom: var(--spacing-md);
+                max-width: 100%;
             }
             
             .secondary-button {
@@ -821,6 +871,7 @@
             .main-button {
                 margin-bottom: var(--spacing-md);
                 padding: var(--spacing-md);
+                max-width: 100%;
             }
 
             .status-notification {
@@ -875,7 +926,8 @@
             justify-content: center;
             align-items: center;
             z-index: 9999;
-            transition: opacity 0.5s ease, visibility 0.5s ease;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+            will-change: opacity, visibility;
         }
         
         .loading-screen.hidden {
@@ -911,6 +963,14 @@
             100% { opacity: 0.92; transform: scale(0.995); }
         }
         
+        /* Hardware acceleration for animations */
+        .animate-hardware {
+            transform: translateZ(0);
+            backface-visibility: hidden;
+            perspective: 1000px;
+            will-change: transform, opacity;
+        }
+        
         .loader-bar {
             width: clamp(240px, 80vw, 320px);
             height: 4px;
@@ -942,6 +1002,12 @@
             70% { width: 80%; }
             85% { width: 92%; }
             100% { width: 100%; }
+        }
+        
+        /* Apply hardware acceleration to elements with animations */
+        .loader-progress, .header h1, .main-button, .secondary-button, .stat-card {
+            transform: translateZ(0);
+            will-change: transform;
         }
         
         .loader-text {
@@ -1151,10 +1217,17 @@
         // Initialize App
         tg.expand();
         tg.enableClosingConfirmation();
+        
+        // Better Telegram WebApp integration
         if (tg.platform !== 'unknown') {
             tg.disableZoom();
+            tg.setBackgroundColor("var(--surface-0)");
+            tg.setHeaderColor("var(--surface-0)");
             document.addEventListener('gesturestart', (e) => e.preventDefault());
             document.addEventListener('dblclick', (e) => e.preventDefault());
+            
+            // Improve touch response
+            document.addEventListener('touchstart', () => {}, {passive: true});
         }
         
         // Hide loading screen after content loads
@@ -1177,11 +1250,11 @@
                 loaderText.textContent = loadingMessages[messageIndex];
             }, 1000);
             
-            // Hide loading screen after 5 seconds
+            // Hide loading screen after initialization
             setTimeout(() => {
                 clearInterval(messageInterval);
                 document.getElementById('loading-screen').classList.add('hidden');
-            }, 5000); // Show loading screen for 5 seconds for enhanced UX
+            }, 2000); // Reduced loading time for better UX in Telegram WebApp
         });
         
         
