@@ -8,16 +8,36 @@
     <style>
         :root {
             --primary: #00FF9D;
+            --primary-dark: #00CC7D;
             --surface-0: #0B0F1A;
             --surface-1: #161B2A;
             --surface-2: #21273B;
+            --surface-3: #2A324A;
             --text-primary: #F8FAFC;
             --text-secondary: #94A3B8;
             --error: #FF4444;
             --success: #00FF9D;
             --gradient: linear-gradient(135deg, var(--primary) 0%, #00E6C3 100%);
             --shadow: 0 12px 32px rgba(0,0,0,0.25);
+            --shadow-sm: 0 4px 16px rgba(0,0,0,0.15);
+            --shadow-lg: 0 16px 48px rgba(0,0,0,0.3);
+            --border-light: 1px solid rgba(255,255,255,0.05);
+            --border-primary: 1px solid rgba(0,255,157,0.2);
             --base-font-size: 16px;
+            --border-radius-sm: 0.75rem;
+            --border-radius-md: 1rem;
+            --border-radius-lg: 1.25rem;
+            --spacing-xs: 0.5rem;
+            --spacing-sm: 0.75rem;
+            --spacing-md: 1rem;
+            --spacing-lg: 1.5rem;
+            --spacing-xl: 2rem;
+            /* New viewport-height based spacing variables */
+            --vh-spacing-xs: 1vh;
+            --vh-spacing-sm: 2vh;
+            --vh-spacing-md: 3vh;
+            --vh-spacing-lg: 5vh;
+            --vh-spacing-xl: 7vh;
         }
 
         * {
@@ -35,16 +55,19 @@
 
         html {
             font-size: var(--base-font-size);
+            height: 100%;
         }
 
         body {
             background: var(--surface-0);
             color: var(--text-primary);
             min-height: 100vh;
-            padding: 1rem;
+            height: 100%;
+            margin: 0;
+            padding: 0;
             display: flex;
             justify-content: center;
-            align-items: center;
+            align-items: center; /* Changed from stretch to center */
             flex-direction: column;
             touch-action: pan-x pan-y;
             overscroll-behavior: none;
@@ -53,21 +76,42 @@
         }
 
         .container {
-            max-width: 480px;
-            margin: 0 auto;
+            flex: 1;
             width: 100%;
-            background: var(--surface-1);
-            border-radius: 1.5rem;
-            padding: clamp(1rem, 4vw, 1.5rem);
-            box-shadow: var(--shadow);
-            border: 1px solid rgba(255,255,255,0.05);
+            max-width: 100%;
+            margin: 0 auto;
+            background: var(--surface-0);
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            overflow-x: hidden;
+            box-shadow: var(--shadow-lg);
+            justify-content: center; /* Added to center content vertically */
+        }
+
+        .app-content {
+            max-width: 640px;
+            width: 100%;
+            margin: 0 auto;
+            padding: 1.5rem;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center; /* Added to center content vertically */
+            min-height: 100vh; /* Ensure it takes full viewport height */
         }
 
         .nav-bar {
             display: flex;
             justify-content: flex-end;
             gap: 1.25rem;
-            margin-bottom: 2rem;
+            margin-bottom: var(--vh-spacing-md); /* Changed to vh-based spacing */
+            padding: var(--vh-spacing-sm) 1.5rem 0;
+            width: 100%;
+            position: absolute;
+            top: 0;
+            left: 0;
+            box-sizing: border-box;
         }
 
         .nav-icon {
@@ -85,8 +129,15 @@
 
         .header {
             text-align: center;
-            margin-bottom: 2.5rem;
-            padding: 0 1rem;
+            margin-bottom: var(--vh-spacing-xl); /* Increased spacing from var(--vh-spacing-lg) to var(--vh-spacing-xl) for a more professional look */
+            padding: var(--vh-spacing-md) 1rem 0;
+            position: relative;
+            animation: fadeIn 0.8s ease-out;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
         .header h1 {
@@ -94,14 +145,29 @@
             background-clip: text;
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            font-size: clamp(1.5rem, 5vw, 1.75rem);
-            font-weight: 700;
-            margin-bottom: 0.5rem;
-            line-height: 1.2;
+            font-size: clamp(2rem, 5.5vw, 2.5rem);
+            font-weight: 800;
+            margin-bottom: 0.875rem;
+            line-height: 1.1;
+            letter-spacing: -0.75px;
+            text-shadow: 0 5px 15px rgba(0, 255, 157, 0.15);
+            position: relative;
+            transform: translateZ(0);
+            transition: transform 0.3s ease;
+        }
+        
+        .header h1:hover {
+            transform: translateY(-2px) translateZ(0);
         }
 
         .text-secondary {
-            font-size: clamp(0.875rem, 3vw, 1rem);
+            font-size: clamp(0.9375rem, 3vw, 1.0625rem);
+            color: var(--text-secondary);
+            opacity: 0.95;
+            font-weight: 400;
+            max-width: 85%;
+            margin: 0 auto;
+            line-height: 1.6;
         }
 
         .stat-value {
@@ -113,8 +179,8 @@
             bottom: 2rem;
             left: 50%;
             transform: translateX(-50%);
-            padding: 0.75rem 1.5rem;
-            border-radius: 0.75rem;
+            padding: 0.875rem 1.5rem;
+            border-radius: var(--border-radius-md);
             font-weight: 500;
             backdrop-filter: blur(10px);
             z-index: 1000;
@@ -126,32 +192,62 @@
             overflow: hidden;
             text-overflow: ellipsis;
             font-size: clamp(0.875rem, 3vw, 1rem);
+            box-shadow: var(--shadow-lg);
+            animation: slideUp 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
+        
+        @keyframes slideUp {
+            from { transform: translate(-50%, 100%); opacity: 0; }
+            to { transform: translate(-50%, 0); opacity: 1; }
+        }
+        
+        .status-notification.success {
+            background: rgba(0, 255, 157, 0.15);
+            border: 1px solid rgba(0, 255, 157, 0.3);
+            color: var(--success);
+        }
+        
+        .status-notification.error {
+            background: rgba(255, 68, 68, 0.15);
+            border: 1px solid rgba(255, 68, 68, 0.3);
+            color: var(--error);
+        }
+        
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
-            gap: 1rem;
-            margin-bottom: 2rem;
+            gap: 1.25rem;
+            margin-bottom: var(--vh-spacing-lg); /* Changed to vh-based spacing */
+            width: 100%;
         }
 
         .stat-card {
-            background: var(--surface-2);
-            padding: 1.25rem;
-            border-radius: 1rem;
+            background: var(--surface-1);
+            padding: 1.5rem;
+            border-radius: var(--border-radius-lg);
             text-align: center;
-            transition: transform 0.2s ease;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            border: var(--border-light);
+            box-shadow: var(--shadow-sm);
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-3px);
+            box-shadow: var(--shadow);
+            border: var(--border-primary);
         }
 
         .stat-label {
             font-size: 0.875rem;
             color: var(--text-secondary);
-            margin-bottom: 0.5rem;
+            margin-bottom: 0.75rem;
             letter-spacing: 0.5px;
+            font-weight: 500;
         }
 
         .stat-value {
-            font-size: 1.5rem;
-            font-weight: 600;
+            font-size: 1.75rem;
+            font-weight: 700;
             background: var(--gradient);
             background-clip: text;
             -webkit-background-clip: text;
@@ -161,18 +257,20 @@
 
         .main-button {
             width: 100%;
-            padding: 1.125rem;
+            padding: 1.25rem;
             border: none;
-            border-radius: 1rem;
+            border-radius: var(--border-radius-lg);
             background: var(--gradient);
             color: var(--surface-0);
-            font-weight: 600;
-            font-size: 1rem;
+            font-weight: 700;
+            font-size: 1.125rem;
             cursor: pointer;
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
-            margin-bottom: 1.5rem;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            margin-bottom: var(--vh-spacing-md); /* Changed to vh-based spacing */
             position: relative;
             overflow: hidden;
+            box-shadow: 0 8px 24px rgba(0, 255, 157, 0.25);
+            letter-spacing: 0.5px;
         }
 
         .main-button::after {
@@ -189,7 +287,52 @@
 
         .main-button:hover {
             transform: translateY(-2px);
-            box-shadow: 0 8px 24px rgba(0, 255, 157, 0.2);
+            box-shadow: 0 8px 24px rgba(0, 255, 157, 0.3);
+        }
+        
+        .main-button:active {
+            transform: translateY(1px);
+            box-shadow: 0 2px 8px rgba(0, 255, 157, 0.2);
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: var(--vh-spacing-md); /* Changed to vh-based spacing */
+            width: 100%;
+        }
+        
+        .secondary-button {
+            flex: 1;
+            padding: var(--spacing-md);
+            border: var(--border-light);
+            border-radius: var(--border-radius-md);
+            background: var(--surface-1);
+            color: var(--text-primary);
+            font-weight: 600;
+            font-size: 0.9375rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.625rem;
+            box-shadow: var(--shadow-sm);
+        }
+        
+        .secondary-button svg {
+            color: var(--primary);
+        }
+        
+        .secondary-button:hover {
+            background: var(--surface-2);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+        
+        .secondary-button:active {
+            transform: translateY(1px);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         }
 
         .modal-overlay {
@@ -198,7 +341,7 @@
             left: 0;
             right: 0;
             bottom: 0;
-            background: rgba(0,0,0,0.7);
+            background: rgba(0,0,0,0.8);
             backdrop-filter: blur(12px);
             display: none;
             z-index: 100;
@@ -210,24 +353,31 @@
             left: 50%;
             transform: translate(-50%, -50%);
             background: var(--surface-1);
-            border-radius: 1.5rem;
-            padding: 2rem;
+            border-radius: var(--border-radius-lg);
+            padding: var(--spacing-xl);
             width: 90%;
-            max-width: 400px;
+            max-width: 480px;
             display: none;
             z-index: 101;
-            border: 1px solid rgba(255,255,255,0.1);
+            border: var(--border-light);
+            box-shadow: var(--shadow-lg);
+            animation: modalFadeIn 0.4s ease-out;
+        }
+        
+        @keyframes modalFadeIn {
+            from { opacity: 0; transform: translate(-50%, -48%); }
+            to { opacity: 1; transform: translate(-50%, -50%); }
         }
 
         .modal-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 1.5rem;
+            margin-bottom: 1.75rem;
         }
 
         .modal-title {
-            font-size: 1.25rem;
+            font-size: 1.375rem;
             font-weight: 600;
             display: flex;
             align-items: center;
@@ -240,47 +390,79 @@
             cursor: pointer;
             color: var(--text-secondary);
             transition: color 0.2s ease;
+            padding: 0.25rem;
+            border-radius: 50%;
+            background: var(--surface-2);
+        }
+        
+        .modal-close:hover {
+            color: var(--text-primary);
+            background: var(--surface-3);
         }
 
         .input-group {
-            margin-bottom: 1.25rem;
+            margin-bottom: 1.5rem;
         }
 
         .input-label {
             display: block;
             font-size: 0.875rem;
             color: var(--text-secondary);
-            margin-bottom: 0.5rem;
+            margin-bottom: 0.625rem;
+            font-weight: 500;
         }
 
         .input-field {
             width: 100%;
-            padding: 0.875rem;
+            padding: var(--spacing-md);
             background: var(--surface-2);
-            border: 1px solid rgba(255,255,255,0.1);
-            border-radius: 0.75rem;
+            border: var(--border-light);
+            border-radius: var(--border-radius-md);
             color: var(--text-primary);
             font-size: 1rem;
-            transition: border-color 0.2s ease;
+            transition: all 0.3s ease;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .input-field:focus {
+            border-color: rgba(0, 255, 157, 0.5);
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(0, 255, 157, 0.15), inset 0 2px 4px rgba(0,0,0,0.05);
+            transform: translateY(-1px);
         }
 
         .referral-card {
             background: var(--surface-2);
-            padding: 1.5rem;
-            border-radius: 1rem;
+            padding: var(--spacing-xl);
+            border-radius: var(--border-radius-lg);
+            border: var(--border-light);
+            box-shadow: var(--shadow-sm);
+            transition: box-shadow 0.3s ease;
+        }
+        
+        .referral-card:hover {
+            box-shadow: var(--shadow);
         }
 
         .referral-incentive {
             display: flex;
             align-items: center;
-            gap: 1rem;
-            padding: 1rem;
+            gap: var(--spacing-md);
+            padding: var(--spacing-lg);
             background: rgba(0, 255, 157, 0.1);
-            border-radius: 0.75rem;
-            margin-bottom: 1.5rem;
+            border-radius: var(--border-radius-md);
+            margin-bottom: var(--spacing-xl);
+            border: var(--border-primary);
+            box-shadow: 0 4px 16px rgba(0, 255, 157, 0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .referral-incentive:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(0, 255, 157, 0.15);
         }
 
         .status-notification {
@@ -288,8 +470,298 @@
             bottom: 2rem;
             left: 50%;
             transform: translateX(-50%);
-            padding: 1rem 2rem;
-            border-radius: 0.75rem;
+            padding: 0.875rem 1.5rem;
+            border-radius: var(--border-radius-md);
+            font-weight: 500;
+            backdrop-filter: blur(10px);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            max-width: min(90%, 400px);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            font-size: clamp(0.875rem, 3vw, 1rem);
+            box-shadow: var(--shadow-lg);
+            animation: slideUp 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        
+        @keyframes slideUp {
+            from { transform: translate(-50%, 100%); opacity: 0; }
+            to { transform: translate(-50%, 0); opacity: 1; }
+        }
+        
+        .status-notification.success {
+            background: rgba(0, 255, 157, 0.15);
+            border: 1px solid rgba(0, 255, 157, 0.3);
+            color: var(--success);
+        }
+        
+        .status-notification.error {
+            background: rgba(255, 68, 68, 0.15);
+            border: 1px solid rgba(255, 68, 68, 0.3);
+            color: var(--error);
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1.25rem;
+            margin-bottom: 2.5rem;
+        }
+
+        .stat-card {
+            background: var(--surface-1);
+            padding: 1.5rem;
+            border-radius: var(--border-radius-lg);
+            text-align: center;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            border: var(--border-light);
+            box-shadow: var(--shadow-sm);
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-3px);
+            box-shadow: var(--shadow);
+            border: var(--border-primary);
+        }
+
+        .stat-label {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            margin-bottom: 0.75rem;
+            letter-spacing: 0.5px;
+            font-weight: 500;
+        }
+
+        .stat-value {
+            font-size: 1.75rem;
+            font-weight: 700;
+            background: var(--gradient);
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: -0.5px;
+        }
+
+        .main-button {
+            width: 100%;
+            padding: 1.25rem;
+            border: none;
+            border-radius: var(--border-radius-lg);
+            background: var(--gradient);
+            color: var(--surface-0);
+            font-weight: 700;
+            font-size: 1.125rem;
+            cursor: pointer;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            margin-bottom: var(--spacing-lg);
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 8px 24px rgba(0, 255, 157, 0.25);
+            letter-spacing: 0.5px;
+        }
+
+        .main-button::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255,255,255,0.1);
+            opacity: 0;
+            transition: opacity 0.2s ease;
+        }
+
+        .main-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(0, 255, 157, 0.3);
+        }
+        
+        .main-button:active {
+            transform: translateY(1px);
+            box-shadow: 0 2px 8px rgba(0, 255, 157, 0.2);
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: var(--spacing-md);
+            width: 100%;
+        }
+        
+        .secondary-button {
+            flex: 1;
+            padding: var(--spacing-md);
+            border: var(--border-light);
+            border-radius: var(--border-radius-md);
+            background: var(--surface-1);
+            color: var(--text-primary);
+            font-weight: 600;
+            font-size: 0.9375rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.625rem;
+            box-shadow: var(--shadow-sm);
+        }
+        
+        .secondary-button svg {
+            color: var(--primary);
+        }
+        
+        .secondary-button:hover {
+            background: var(--surface-2);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+        
+        .secondary-button:active {
+            transform: translateY(1px);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.8);
+            backdrop-filter: blur(12px);
+            display: none;
+            z-index: 100;
+        }
+
+        .modal {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: var(--surface-1);
+            border-radius: var(--border-radius-lg);
+            padding: var(--spacing-xl);
+            width: 90%;
+            max-width: 480px;
+            display: none;
+            z-index: 101;
+            border: var(--border-light);
+            box-shadow: var(--shadow-lg);
+            animation: modalFadeIn 0.4s ease-out;
+        }
+        
+        @keyframes modalFadeIn {
+            from { opacity: 0; transform: translate(-50%, -48%); }
+            to { opacity: 1; transform: translate(-50%, -50%); }
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.75rem;
+        }
+
+        .modal-title {
+            font-size: 1.375rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .modal-close {
+            width: 1.5rem;
+            height: 1.5rem;
+            cursor: pointer;
+            color: var(--text-secondary);
+            transition: color 0.2s ease;
+            padding: 0.25rem;
+            border-radius: 50%;
+            background: var(--surface-2);
+        }
+        
+        .modal-close:hover {
+            color: var(--text-primary);
+            background: var(--surface-3);
+        }
+
+        .input-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .input-label {
+            display: block;
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            margin-bottom: 0.625rem;
+            font-weight: 500;
+        }
+
+        .input-field {
+            width: 100%;
+            padding: var(--spacing-md);
+            background: var(--surface-2);
+            border: var(--border-light);
+            border-radius: var(--border-radius-md);
+            color: var(--text-primary);
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .input-field:focus {
+            border-color: rgba(0, 255, 157, 0.5);
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(0, 255, 157, 0.15), inset 0 2px 4px rgba(0,0,0,0.05);
+            transform: translateY(-1px);
+        }
+
+        .referral-card {
+            background: var(--surface-2);
+            padding: var(--spacing-xl);
+            border-radius: var(--border-radius-lg);
+            border: var(--border-light);
+            box-shadow: var(--shadow-sm);
+            transition: box-shadow 0.3s ease;
+        }
+        
+        .referral-card:hover {
+            box-shadow: var(--shadow);
+        }
+
+        .referral-incentive {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-md);
+            padding: var(--spacing-lg);
+            background: rgba(0, 255, 157, 0.1);
+            border-radius: var(--border-radius-md);
+            margin-bottom: var(--spacing-xl);
+            border: var(--border-primary);
+            box-shadow: 0 4px 16px rgba(0, 255, 157, 0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .referral-incentive:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(0, 255, 157, 0.15);
+        }
+
+        .status-notification {
+            position: fixed;
+            bottom: 2rem;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 0.875rem 1.5rem;
+            border-radius: 1rem;
             font-weight: 500;
             backdrop-filter: blur(10px);
             z-index: 1000;
@@ -305,28 +777,61 @@
             to { transform: translate(-50%, 0); opacity: 1; }
         }
 
+        @media screen and (max-width: 768px) {
+            .app-content {
+                padding: var(--spacing-md);
+            }
+            
+            .header {
+                margin-bottom: var(--spacing-xl);
+            }
+            
+            .stats-grid {
+                margin-bottom: var(--spacing-xl);
+            }
+        }
+        
         @media screen and (max-width: 480px) {
             :root {
                 --base-font-size: 14px;
             }
 
-            .container {
-                padding: 1rem;
-                border-radius: 1rem;
+            .app-content {
+                padding: var(--spacing-sm);
             }
 
             .stats-grid {
-                gap: 0.75rem;
+                gap: var(--spacing-md);
             }
 
             .stat-card {
-                padding: 1rem;
+                padding: var(--spacing-md);
+            }
+            
+            .action-buttons {
+                flex-direction: column;
+                gap: var(--spacing-sm);
+                margin-bottom: var(--spacing-md);
+            }
+            
+            .secondary-button {
+                padding: var(--spacing-sm);
+            }
+
+            .main-button {
+                margin-bottom: var(--spacing-md);
+                padding: var(--spacing-md);
             }
 
             .status-notification {
-                bottom: 1rem;
-                padding: 0.5rem 1rem;
-                max-width: 85%;
+                bottom: var(--spacing-lg);
+                padding: var(--spacing-sm) var(--spacing-md);
+                max-width: 90%;
+                font-size: 0.875rem;
+            }
+            
+            .modal {
+                padding: var(--spacing-lg);
             }
         }
 
@@ -335,34 +840,137 @@
                 --base-font-size: 12px;
             }
 
-            body {
-                padding: 0.75rem;
-            }
-
-            .container {
-                padding: 0.75rem;
+            .app-content {
+                padding: var(--spacing-xs);
             }
 
             .nav-bar {
-                gap: 1rem;
-                margin-bottom: 1.5rem;
+                gap: var(--spacing-md);
+                margin-bottom: var(--spacing-lg);
             }
 
             .header {
-                margin-bottom: 2rem;
+                margin-bottom: var(--spacing-lg);
+                padding-top: var(--spacing-md);
+            }
+            
+            .stat-card {
+                padding: var(--spacing-sm);
+            }
+            
+            .referral-incentive {
+                padding: var(--spacing-md);
             }
         }
+        
+        /* Loading Screen Styles */
+        .loading-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--surface-0);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            transition: opacity 0.5s ease, visibility 0.5s ease;
+        }
+        
+        .loading-screen.hidden {
+            opacity: 0;
+            visibility: hidden;
+        }
+        
+        .loader-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            max-width: 80%;
+        }
+        
+        .loader-logo {
+            font-size: clamp(2.5rem, 8vw, 3.5rem);
+            font-weight: 800;
+            margin-bottom: 2rem;
+            background: var(--gradient);
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: -1px;
+            text-shadow: 0 4px 12px rgba(0, 255, 157, 0.12);
+            animation: subtle-pulse 3s infinite ease-in-out;
+            position: relative;
+        }
+        
+        @keyframes subtle-pulse {
+            0% { opacity: 0.92; transform: scale(0.995); }
+            50% { opacity: 1; transform: scale(1.005); }
+            100% { opacity: 0.92; transform: scale(0.995); }
+        }
+        
+        .loader-bar {
+            width: clamp(240px, 80vw, 320px);
+            height: 4px;
+            background: var(--surface-2);
+            border-radius: 2px;
+            overflow: hidden;
+            margin-bottom: 1rem;
+            position: relative;
+        }
+        
+        .loader-progress {
+            position: absolute;
+            top: 0;
+            left: 0;
+            height: 100%;
+            width: 0%;
+            background: var(--gradient);
+            border-radius: 2px;
+            box-shadow: 0 0 10px rgba(0, 255, 157, 0.3);
+            animation: progress 4s cubic-bezier(0.4, 0.0, 0.2, 1) forwards;
+        }
+        
+        @keyframes progress {
+            0% { width: 0%; }
+            10% { width: 15%; }
+            20% { width: 25%; }
+            30% { width: 40%; }
+            50% { width: 65%; }
+            70% { width: 80%; }
+            85% { width: 92%; }
+            100% { width: 100%; }
+        }
+        
+        .loader-text {
+            color: var(--text-secondary);
+            font-size: clamp(0.875rem, 3vw, 0.9375rem);
+            font-weight: 500;
+            text-align: center;
+            opacity: 0.9;
+            min-height: 1.5em;
+        }
+        
     </style>
 </head>
 <body>
+    <!-- Loading Screen -->
+    <div id="loading-screen" class="loading-screen">
+        <div class="loader-container">
+            <div class="loader-logo">AdCents</div>
+            <div class="loader-bar">
+                <div class="loader-progress"></div>
+            </div>
+            <div id="loader-text" class="loader-text">Initializing AdCents Network</div>
+        </div>
+    </div>
+    
     <div class="container">
+        <div class="app-content">
         <div class="nav-bar">
-            <svg class="nav-icon" onclick="showWithdrawModal()" viewBox="0 0 24 24">
-                <path fill="currentColor" d="M19 14V6c0-1.1-.9-2-2-2H3c-1.1 0-2 .9-2 2v8c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zm-2 0H3V6h14v8zm-7-7c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3zm13 0v11c0 1.1-.9 2-2 2H4v-2h17V7h2z"/>
-            </svg>
-            <svg class="nav-icon" onclick="showReferralModal()" viewBox="0 0 24 24">
-                <path fill="currentColor" d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92s2.92-1.31 2.92-2.92-1.31-2.92-2.92-2.92z"/>
-            </svg>
+            <!-- Navigation icons removed as requested -->
         </div>
 
         <div class="header">
@@ -384,6 +992,22 @@
         <button class="main-button" onclick="showAd()">
             ▶ Watch Ad (+$0.02)
         </button>
+        
+        <div class="action-buttons">
+            <button class="secondary-button" onclick="showWithdrawModal()">
+                <svg viewBox="0 0 24 24" width="20" height="20">
+                    <path fill="currentColor" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1.41 16.09V20h-2.67v-1.93c-1.71-.36-3.16-1.46-3.27-3.4h1.96c.1 1.05.82 1.87 2.65 1.87 1.96 0 2.4-.98 2.4-1.59 0-.83-.44-1.61-2.67-2.14-2.48-.6-4.18-1.62-4.18-3.67 0-1.72 1.39-2.84 3.11-3.21V4h2.67v1.95c1.86.45 2.79 1.86 2.85 3.39H14.3c-.05-1.11-.64-1.87-2.22-1.87-1.5 0-2.4.68-2.4 1.64 0 .84.65 1.39 2.67 1.91s4.18 1.39 4.18 3.91c-.01 1.83-1.38 2.83-3.12 3.16z"/>
+                </svg>
+                Withdraw
+            </button>
+            <button class="secondary-button" onclick="showReferralModal()">
+                <svg viewBox="0 0 24 24" width="20" height="20">
+                    <path fill="currentColor" d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92s2.92-1.31 2.92-2.92-1.31-2.92-2.92-2.92z"/>
+                </svg>
+                Refer & Earn
+            </button>
+        </div>
+        </div>
     </div>
 
     <!-- Withdraw Modal -->
@@ -439,8 +1063,8 @@
                     <path fill="currentColor" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/>
                 </svg>
                 <div>
-                    <h3>Get $0.05 instantly</h3>
-                    <p class="text-secondary">And 10% lifetime loyalty per referral!</p>
+                    <h3>Earn $0.05 USDT</h3>
+                    <p class="text-secondary">For every successful referral</p>
                 </div>
             </div>
             <div class="input-group">
@@ -532,6 +1156,35 @@
             document.addEventListener('gesturestart', (e) => e.preventDefault());
             document.addEventListener('dblclick', (e) => e.preventDefault());
         }
+        
+        // Hide loading screen after content loads
+        window.addEventListener('load', () => {
+            // Rotating loading messages for enhanced user experience
+            const loadingMessages = [
+                "Loading your earnings...",
+                "Preparing your dashboard...",
+                "Connecting to AdCents network...",
+                "Almost ready...",
+                "Finalizing your experience..."
+            ];
+            
+            let messageIndex = 0;
+            const loaderText = document.getElementById('loader-text');
+            
+            // Change message every second during the 5-second loading period
+            const messageInterval = setInterval(() => {
+                messageIndex = (messageIndex + 1) % loadingMessages.length;
+                loaderText.textContent = loadingMessages[messageIndex];
+            }, 1000);
+            
+            // Hide loading screen after 5 seconds
+            setTimeout(() => {
+                clearInterval(messageInterval);
+                document.getElementById('loading-screen').classList.add('hidden');
+            }, 5000); // Show loading screen for 5 seconds for enhanced UX
+        });
+        
+        
         initReferralSystem();
         updateUI();
 
