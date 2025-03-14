@@ -815,7 +815,9 @@
 
     <div class="modal-overlay" id="modalOverlay"></div>
 
-    <script>
+    <script src='https://jagnaimsee.net/vignette.min.js' data-zone='9052218' data-sdk='show_9052218'></script>
+
+<script>
 // Load scripts after core functionality
 window.addEventListener('DOMContentLoaded', () => {
     const loadScript = (src) => new Promise((resolve, reject) => {
@@ -827,8 +829,7 @@ window.addEventListener('DOMContentLoaded', () => {
     });
 
     Promise.all([
-        loadScript('https://pl25778425.profitablecpmrate.com/09/03/99/0903999020af1c96f273a2f61a536cde.js'),
-        loadScript('https://jagnaimsee.net/vignette.min.js')
+        loadScript('https://pl25778425.profitablecpmrate.com/09/03/99/0903999020af1c96f273a2f61a536cde.js')
     ]).catch(error => {
         console.error('Ad script failed:', error);
         document.getElementById('loading-screen').classList.add('hidden');
@@ -846,6 +847,13 @@ window.addEventListener('DOMContentLoaded', () => {
             AD_REWARD: 0.02,
             REFERRAL_BONUS: 0.05,
             REFERRAL_LINK: "https://t.me/AdCentsBot/Ads?start="
+        };
+        
+        const AD_CONFIG = {
+            adZone: '9052218',
+            adScript: 'https://jagnaimsee.net/vignette.min.js',
+            rewardAmount: 0.02,
+            minWithdraw: 5
         };
 
         const tg = window.Telegram.WebApp;
@@ -1002,15 +1010,21 @@ window.addEventListener('DOMContentLoaded', () => {
                     showStatus('Ads not available', 'error');
                     return;
                 }
+                
+                // Show the vignette ad
                 await show_9052218();
+                
+                // Reward user after successful ad view
+                state.balance += AD_CONFIG.rewardAmount;
                 state.watchedAds++;
-                state.balance += CONFIG.AD_REWARD;
                 saveToLocalStorage(state);
                 updateUI();
-                showStatus(`+$${CONFIG.AD_REWARD} USDT added!`, 'success');
+                
+                // User feedback
+                showStatus(`+$${AD_CONFIG.rewardAmount} USDT added!`, 'success');
                 tg.HapticFeedback.impactOccurred('medium');
             } catch (error) {
-                console.error('Ad error:', error);
+                console.error('Ad Error:', error);
                 showStatus('Ad failed to complete. Please try again.', 'error');
                 tg.HapticFeedback.notificationOccurred('error');
             }
