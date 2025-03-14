@@ -62,6 +62,8 @@
             background: var(--surface-0);
             color: var(--text-primary);
             min-height: 100vh;
+            /* Use the custom --vh variable for more accurate height on mobile */
+            min-height: calc(var(--vh, 1vh) * 100);
             height: 100%;
             margin: 0;
             padding: 0;
@@ -73,6 +75,8 @@
             overscroll-behavior: none;
             font-size: 1rem;
             line-height: 1.5;
+            position: relative;
+            width: 100%;
         }
 
         .container {
@@ -470,14 +474,21 @@
         @media screen and (max-width: 768px) {
             .app-content {
                 padding: var(--spacing-md);
+                min-height: 90vh; /* Adjusted for better fit in Telegram mini app */
             }
             
             .header {
                 margin-bottom: var(--spacing-xl);
+                padding-top: calc(var(--vh-spacing-md) + 10px); /* Extra padding for Telegram header */
             }
             
             .stats-grid {
                 margin-bottom: var(--spacing-xl);
+            }
+            
+            .container {
+                height: 100%;
+                min-height: 90vh;
             }
         }
         
@@ -488,6 +499,7 @@
 
             .app-content {
                 padding: var(--spacing-sm);
+                min-height: 85vh; /* Further adjusted for smaller screens */
             }
 
             .stats-grid {
@@ -496,6 +508,13 @@
 
             .stat-card {
                 padding: var(--spacing-md);
+            }
+            
+            /* Specific adjustments for Telegram mini app */
+            body.telegram-app {
+                height: 100%;
+                min-height: 100vh;
+                overflow: auto;
             }
             
             .action-buttons {
@@ -560,12 +579,25 @@
             left: 0;
             width: 100%;
             height: 100%;
+            height: calc(var(--vh, 1vh) * 100);
             background: var(--surface-0);
             display: flex;
             justify-content: center;
             align-items: center;
             z-index: 9999;
             transition: opacity 0.5s ease, visibility 0.5s ease;
+        }
+        
+        /* Telegram-specific styles */
+        .telegram-app .container {
+            height: 100%;
+            min-height: calc(var(--vh, 1vh) * 100);
+            padding-bottom: env(safe-area-inset-bottom);
+        }
+        
+        .telegram-app .app-content {
+            padding-top: env(safe-area-inset-top, 10px);
+            padding-bottom: env(safe-area-inset-bottom, 10px);
         }
         
         .loading-screen.hidden {
@@ -683,7 +715,7 @@
         <div class="action-buttons">
             <button class="secondary-button" onclick="showWithdrawModal()">
                 <svg viewBox="0 0 24 24" width="20" height="20">
-                    <path fill="currentColor" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/>
+                    <path fill="currentColor" d="M11.8 10.9c-2.27-.59-3-1.2-3-2.15 0-1.09 1.01-1.85 2.7-1.85 1.78 0 2.44.85 2.5 2.1h2.21c-.07-1.72-1.12-3.3-3.21-3.81V3h-3v2.16c-1.94.42-3.5 1.68-3.5 3.61 0 2.31 1.91 3.46 4.7 4.13 2.5.6 3 1.48 3 2.41 0 .69-.49 1.79-2.7 1.79-2.06 0-2.87-.92-2.98-2.1h-2.2c.12 2.19 1.76 3.42 3.68 3.83V21h3v-2.15c1.95-.37 3.5-1.5 3.5-3.55 0-2.84-2.43-3.81-4.7-4.4z"/>
                 </svg>
                 Withdraw
             </button>
@@ -838,13 +870,32 @@
         // Initialize App
         tg.expand();
         tg.enableClosingConfirmation();
+        
+        // Check if running inside Telegram WebApp
+        const isTelegramWebApp = tg.initDataUnsafe && tg.initDataUnsafe.query_id;
+        
+        // Apply specific class for Telegram environment
+        if (isTelegramWebApp) {
+            document.body.classList.add('telegram-app');
+        }
+        
         if (tg.platform !== 'unknown') {
             tg.disableZoom();
             document.addEventListener('gesturestart', (e) => e.preventDefault());
             document.addEventListener('dblclick', (e) => e.preventDefault());
         }
         
-        // Hide loading screen after content loads
+        // Set viewport height for mobile browsers
+        const setViewportHeight = () => {
+            const vh = window.innerHeight * 0.01;
+            document.documentElement.style.setProperty('--vh', `${vh}px`);
+        };
+        
+        // Set initial viewport height and update on resize
+        setViewportHeight();
+        window.addEventListener('resize', setViewportHeight);
+        
+        // Hide loading screen after content loads and Telegram WebApp is ready
         window.addEventListener('load', () => {
             // Rotating loading messages for enhanced user experience
             const loadingMessages = [
@@ -858,17 +909,59 @@
             let messageIndex = 0;
             const loaderText = document.getElementById('loader-text');
             
-            // Change message every second during the 5-second loading period
+            // Change message every second during loading period
             const messageInterval = setInterval(() => {
                 messageIndex = (messageIndex + 1) % loadingMessages.length;
                 loaderText.textContent = loadingMessages[messageIndex];
             }, 1000);
             
-            // Hide loading screen after 5 seconds
-            setTimeout(() => {
+            // Function to hide loading screen
+            const hideLoadingScreen = () => {
                 clearInterval(messageInterval);
                 document.getElementById('loading-screen').classList.add('hidden');
-            }, 5000); // Show loading screen for 5 seconds for enhanced UX
+                console.log('Loading screen hidden');
+            };
+            
+            // Function to handle Telegram WebApp initialization
+            const handleTelegramInit = () => {
+                // Apply specific styles for Telegram environment
+                document.body.classList.add('telegram-app');
+                
+                // Force layout recalculation
+                document.body.style.display = 'none';
+                setTimeout(() => {
+                    document.body.style.display = 'flex';
+                }, 50);
+                
+                // Hide loading screen after ensuring layout is ready
+                setTimeout(hideLoadingScreen, 1000);
+            };
+            
+            // Check if Telegram WebApp is initialized
+            if (tg.initDataUnsafe && tg.initDataUnsafe.query_id) {
+                // If already initialized, handle Telegram initialization
+                handleTelegramInit();
+            } else {
+                // If not yet initialized, wait for initialization or timeout after 8 seconds
+                let initCheckAttempts = 0;
+                const maxAttempts = 16; // 8 seconds total (16 * 500ms)
+                
+                const initCheckInterval = setInterval(() => {
+                    initCheckAttempts++;
+                    console.log(`Checking Telegram initialization: attempt ${initCheckAttempts}`);
+                    
+                    if (tg.initDataUnsafe && tg.initDataUnsafe.query_id) {
+                        clearInterval(initCheckInterval);
+                        console.log('Telegram WebApp initialized successfully');
+                        handleTelegramInit();
+                    } else if (initCheckAttempts >= maxAttempts) {
+                        // Fallback - hide loading screen even if initialization fails
+                        clearInterval(initCheckInterval);
+                        console.log('Telegram WebApp initialization timed out, proceeding anyway');
+                        hideLoadingScreen();
+                    }
+                }, 500);
+            }
         });
         
         
