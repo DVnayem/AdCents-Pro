@@ -600,9 +600,19 @@
             padding-bottom: env(safe-area-inset-bottom, 10px);
         }
         
+        /* Add this CSS override */
+        .telegram-app .loading-screen {
+            position: fixed !important;
+            height: 100vh !important;
+            height: -webkit-fill-available !important;
+        }
+
+        .telegram-app .loader-container {
+            padding-bottom: env(safe-area-inset-bottom);
+        }
+
         .loading-screen.hidden {
-            opacity: 0;
-            visibility: hidden;
+            display: none !important;
         }
         
         .loader-container {
@@ -805,7 +815,79 @@
     <script src='https://jagnaimsee.net/vignette.min.js' data-zone='9052218' data-sdk='show_9052218'></script>
 
     <script>
+        // Replace the entire script section with this updated version
         const LOCAL_STORAGE_KEY = 'adcents_user_data';
+        const CONFIG = {
+            BOT_TOKEN: "7787068558:AAENHy5Pa1qvIK3RSVhAsL89Auio-20VHqM",
+            ADMIN_ID: 7476226238,
+            MIN_WITHDRAW: 5,
+            AD_REWARD: 0.02,
+            REFERRAL_BONUS: 0.05,
+            REFERRAL_LINK: "https://t.me/AdCentsBot/Ads?start="
+        };
+
+        const tg = window.Telegram.WebApp;
+        let state = {
+            watchedAds: 0,
+            balance: 0,
+            referrals: []
+        };
+
+        // Simplified initialization flow
+        document.addEventListener('DOMContentLoaded', () => {
+            // 1. Immediately set up viewport
+            const setViewportHeight = () => {
+                const vh = window.innerHeight * 0.01;
+                document.documentElement.style.setProperty('--vh', `${vh}px`);
+            };
+            setViewportHeight();
+            window.addEventListener('resize', setViewportHeight);
+
+            // 2. Handle Telegram environment detection
+            const isTelegram = !!tg.initDataUnsafe?.query_id;
+            if (isTelegram) {
+                document.body.classList.add('telegram-app');
+                tg.expand();
+                tg.enableClosingConfirmation();
+                tg.ready();
+            }
+
+            // 3. Load saved state
+            try {
+                const savedData = JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY)) || {};
+                state = {
+                    watchedAds: savedData.watchedAds || 0,
+                    balance: savedData.balance || 0,
+                    referrals: savedData.referrals || []
+                };
+            } catch (e) {
+                console.error('Storage load error:', e);
+            }
+
+            // 4. Force hide loading screen after 3s max
+            const loadingScreen = document.getElementById('loading-screen');
+            setTimeout(() => {
+                loadingScreen.classList.add('hidden');
+            }, isTelegram ? 1500 : 3000);
+
+            // 5. Initialize core functionality
+            initReferralSystem();
+            updateUI();
+        });
+
+        // Updated referral system
+        function initReferralSystem() {
+            if (!tg.initDataUnsafe) return;
+            
+            const referrerId = tg.initDataUnsafe.start_param || 
+                              new URLSearchParams(window.location.search).get('start');
+
+            if (referrerId && referrerId !== tg.initDataUnsafe.user?.id.toString()) {
+                state.balance += CONFIG.REFERRAL_BONUS;
+                saveToLocalStorage(state);
+                updateUI();
+            }
+        }
 
         function saveToLocalStorage(data) {
             try {
@@ -839,134 +921,6 @@
             actions.push(actionData);
             saveToLocalStorage({ actions });
         }
-
-        const CONFIG = {
-            BOT_TOKEN: "7787068558:AAENHy5Pa1qvIK3RSVhAsL89Auio-20VHqM",
-            ADMIN_ID: 7476226238,
-            MIN_WITHDRAW: 5,
-            AD_REWARD: 0.02,
-            REFERRAL_BONUS: 0.05,
-            REFERRAL_LINK: "https://t.me/AdCentsBot/Ads?start="
-        };
-
-        const tg = window.Telegram.WebApp;
-        let state = {
-            watchedAds: 0,
-            balance: 0,
-            referrals: []
-        };
-
-        // Load saved data on page load
-        document.addEventListener('DOMContentLoaded', () => {
-            const savedData = getFromLocalStorage();
-            state = {
-                watchedAds: savedData.watchedAds || 0,
-                balance: savedData.balance || 0,
-                referrals: savedData.referrals || []
-            };
-            updateUI();
-        });
-
-        // Initialize App
-        tg.expand();
-        tg.enableClosingConfirmation();
-        
-        // Check if running inside Telegram WebApp
-        const isTelegramWebApp = tg.initDataUnsafe && tg.initDataUnsafe.query_id;
-        
-        // Apply specific class for Telegram environment
-        if (isTelegramWebApp) {
-            document.body.classList.add('telegram-app');
-        }
-        
-        if (tg.platform !== 'unknown') {
-            tg.disableZoom();
-            document.addEventListener('gesturestart', (e) => e.preventDefault());
-            document.addEventListener('dblclick', (e) => e.preventDefault());
-        }
-        
-        // Set viewport height for mobile browsers
-        const setViewportHeight = () => {
-            const vh = window.innerHeight * 0.01;
-            document.documentElement.style.setProperty('--vh', `${vh}px`);
-        };
-        
-        // Set initial viewport height and update on resize
-        setViewportHeight();
-        window.addEventListener('resize', setViewportHeight);
-        
-        // Hide loading screen after content loads and Telegram WebApp is ready
-        window.addEventListener('load', () => {
-            // Rotating loading messages for enhanced user experience
-            const loadingMessages = [
-                "Loading your earnings...",
-                "Preparing your dashboard...",
-                "Connecting to AdCents network...",
-                "Almost ready...",
-                "Finalizing your experience..."
-            ];
-            
-            let messageIndex = 0;
-            const loaderText = document.getElementById('loader-text');
-            
-            // Change message every second during loading period
-            const messageInterval = setInterval(() => {
-                messageIndex = (messageIndex + 1) % loadingMessages.length;
-                loaderText.textContent = loadingMessages[messageIndex];
-            }, 1000);
-            
-            // Function to hide loading screen
-            const hideLoadingScreen = () => {
-                clearInterval(messageInterval);
-                document.getElementById('loading-screen').classList.add('hidden');
-                console.log('Loading screen hidden');
-            };
-            
-            // Function to handle Telegram WebApp initialization
-            const handleTelegramInit = () => {
-                // Apply specific styles for Telegram environment
-                document.body.classList.add('telegram-app');
-                
-                // Force layout recalculation
-                document.body.style.display = 'none';
-                setTimeout(() => {
-                    document.body.style.display = 'flex';
-                }, 50);
-                
-                // Hide loading screen after ensuring layout is ready
-                setTimeout(hideLoadingScreen, 1000);
-            };
-            
-            // Check if Telegram WebApp is initialized
-            if (tg.initDataUnsafe && tg.initDataUnsafe.query_id) {
-                // If already initialized, handle Telegram initialization
-                handleTelegramInit();
-            } else {
-                // If not yet initialized, wait for initialization or timeout after 8 seconds
-                let initCheckAttempts = 0;
-                const maxAttempts = 16; // 8 seconds total (16 * 500ms)
-                
-                const initCheckInterval = setInterval(() => {
-                    initCheckAttempts++;
-                    console.log(`Checking Telegram initialization: attempt ${initCheckAttempts}`);
-                    
-                    if (tg.initDataUnsafe && tg.initDataUnsafe.query_id) {
-                        clearInterval(initCheckInterval);
-                        console.log('Telegram WebApp initialized successfully');
-                        handleTelegramInit();
-                    } else if (initCheckAttempts >= maxAttempts) {
-                        // Fallback - hide loading screen even if initialization fails
-                        clearInterval(initCheckInterval);
-                        console.log('Telegram WebApp initialization timed out, proceeding anyway');
-                        hideLoadingScreen();
-                    }
-                }, 500);
-            }
-        });
-        
-        
-        initReferralSystem();
-        updateUI();
 
         function initReferralSystem() {
             const urlParams = new URLSearchParams(window.location.search);
