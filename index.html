@@ -605,6 +605,7 @@
             position: fixed !important;
             height: 100vh !important;
             height: -webkit-fill-available !important;
+            z-index: 99999; /* Ensure highest priority */
         }
 
         .telegram-app .loader-container {
@@ -612,7 +613,10 @@
         }
 
         .loading-screen.hidden {
-            display: none !important;
+            opacity: 0 !important;
+            visibility: hidden !important;
+            pointer-events: none !important;
+            transition: all 0.3s ease !important;
         }
         
         .loader-container {
@@ -811,8 +815,26 @@
 
     <div class="modal-overlay" id="modalOverlay"></div>
 
-    <script type='text/javascript' src='https://pl25778425.profitablecpmrate.com/09/03/99/0903999020af1c96f273a2f61a536cde.js'></script>
-    <script src='https://jagnaimsee.net/vignette.min.js' data-zone='9052218' data-sdk='show_9052218'></script>
+    <script>
+// Load scripts after core functionality
+window.addEventListener('DOMContentLoaded', () => {
+    const loadScript = (src) => new Promise((resolve, reject) => {
+        const script = document.createElement('script');
+        script.src = src;
+        script.onload = resolve;
+        script.onerror = reject;
+        document.body.appendChild(script);
+    });
+
+    Promise.all([
+        loadScript('https://pl25778425.profitablecpmrate.com/09/03/99/0903999020af1c96f273a2f61a536cde.js'),
+        loadScript('https://jagnaimsee.net/vignette.min.js')
+    ]).catch(error => {
+        console.error('Ad script failed:', error);
+        document.getElementById('loading-screen').classList.add('hidden');
+    });
+});
+</script>
 
     <script>
         // Replace the entire script section with this updated version
@@ -833,8 +855,30 @@
             referrals: []
         };
 
-        // Simplified initialization flow
         document.addEventListener('DOMContentLoaded', () => {
+            const tg = window.Telegram.WebApp;
+            
+            const hideLoader = () => {
+                document.getElementById('loading-screen').classList.add('hidden');
+                document.body.style.visibility = 'visible';
+            };
+
+            // Telegram-specific setup
+            if (tg.initDataUnsafe?.query_id) {
+                document.body.classList.add('telegram-app');
+                tg.expand();
+                tg.enableClosingConfirmation();
+                tg.ready();
+                tg.isExpanded = true;
+                
+                // Double confirmation for WebApp ready
+                setTimeout(() => tg.ready(), 500);
+                window.Telegram.WebApp.onEvent('viewportChanged', hideLoader);
+            }
+
+            // Fallback for all environments
+            setTimeout(hideLoader, 2500);
+            
             // 1. Immediately set up viewport
             const setViewportHeight = () => {
                 const vh = window.innerHeight * 0.01;
@@ -842,15 +886,6 @@
             };
             setViewportHeight();
             window.addEventListener('resize', setViewportHeight);
-
-            // 2. Handle Telegram environment detection
-            const isTelegram = !!tg.initDataUnsafe?.query_id;
-            if (isTelegram) {
-                document.body.classList.add('telegram-app');
-                tg.expand();
-                tg.enableClosingConfirmation();
-                tg.ready();
-            }
 
             // 3. Load saved state
             try {
@@ -866,6 +901,8 @@
 
             // 4. Force hide loading screen after 3s max
             const loadingScreen = document.getElementById('loading-screen');
+            // Define isTelegram variable based on Telegram WebApp availability
+            const isTelegram = !!tg.initDataUnsafe?.query_id;
             setTimeout(() => {
                 loadingScreen.classList.add('hidden');
             }, isTelegram ? 1500 : 3000);
@@ -891,11 +928,16 @@
 
         function saveToLocalStorage(data) {
             try {
-                const existingData = getFromLocalStorage();
-                const updatedData = { ...existingData, ...data, timestamp: Date.now() };
-                localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(updatedData));
+                const cleanData = {
+                    watchedAds: data.watchedAds,
+                    balance: data.balance,
+                    referrals: data.referrals,
+                    lastUpdated: Date.now()
+                };
+                localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(cleanData));
             } catch (error) {
-                console.error('Error saving to local storage:', error);
+                console.error('Storage error:', error);
+                localStorage.removeItem(LOCAL_STORAGE_KEY);
             }
         }
 
@@ -920,25 +962,6 @@
             const actions = savedData.actions || [];
             actions.push(actionData);
             saveToLocalStorage({ actions });
-        }
-
-        function initReferralSystem() {
-            const urlParams = new URLSearchParams(window.location.search);
-            const referrerId = urlParams.get('start');
-            
-            if (referrerId && referrerId !== tg.initDataUnsafe.user?.id.toString()) {
-                if (!state.referrals.some(r => r.id === referrerId)) {
-                    state.referrals.push({
-                        id: referrerId,
-                        date: new Date().toISOString(),
-                        username: `user_${referrerId.slice(-4)}`
-                    });
-                    state.balance += CONFIG.REFERRAL_BONUS;
-                    saveToLocalStorage(state);
-                    updateUI();
-                    showStatus(`+$${CONFIG.REFERRAL_BONUS} USDT referral bonus!`, 'success');
-                }
-            }
         }
 
         function updateUI() {
@@ -966,12 +989,19 @@
                 </div>
             `).join('') || '<div class="text-secondary">No referrals yet</div>';
             
+            // Add fallback for user ID with a random guest ID
+            const userId = tg.initDataUnsafe.user?.id || 'guest_'+Math.random().toString(36).substr(2,9);
             document.getElementById('referral-link').textContent = 
-                `${CONFIG.REFERRAL_LINK}${tg.initDataUnsafe.user?.id || 'user'}`;
+                `${CONFIG.REFERRAL_LINK}${userId}`;
         }
 
         async function showAd() {
             try {
+                // Check if ad function is available before calling it
+                if(typeof show_9052218 === 'undefined') {
+                    showStatus('Ads not available', 'error');
+                    return;
+                }
                 await show_9052218();
                 state.watchedAds++;
                 state.balance += CONFIG.AD_REWARD;
@@ -1011,7 +1041,7 @@
                     headers: {'Content-Type': 'application/json'},
                     body: JSON.stringify({
                         chat_id: CONFIG.ADMIN_ID,
-                        text: `📤 Withdrawal Request\nUser: @${tg.initDataUnsafe.user?.username}\nAmount: $${amount.toFixed(2)}\nMethod: ${paymentMethod}\nAccount: ${recipientInfo}`
+                        text: `📤 Withdrawal Request\nUser: @${tg.initDataUnsafe.user?.username || 'guest_'+Math.random().toString(36).substr(2,9)}\nAmount: $${amount.toFixed(2)}\nMethod: ${paymentMethod}\nAccount: ${recipientInfo}`
                     })
                 });
 
